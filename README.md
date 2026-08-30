@@ -7,8 +7,7 @@ by **LeakD** · [discord.gg/qteAQmfJmP](https://discord.gg/qteAQmfJmP)
 ---
 
 ```bash
-git clone https://github.com/yourname/pdeobf
-cd pdeobf
+git clone https://github.com/prostone4/Prometheus-Deobfuscator
 ```
 
 ```bash
