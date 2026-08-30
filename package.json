@@ -1,0 +1,17 @@
+{
+  "name": "prometheus-deobfuscator",
+  "version": "1.0.0",
+  "description": "baby shark",
+  "type": "commonjs",
+  "main": "src/index.js",
+  "bin": {
+    "pdeobf": "bin/pdeobf.js"
+  },
+  "scripts": {
+    "deobf": "node bin/pdeobf.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}
