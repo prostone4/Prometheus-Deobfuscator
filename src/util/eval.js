@@ -210,7 +210,7 @@ class Evaluator {
           return false;
         }
         if (binding.kind === 'global') {
-          if (!PURE_GLOBALS.has(binding.name)) deterministic = false;
+          if (!GLOBALS.has(binding.name)) deterministic = false;
           return undefined;
         }
 
@@ -464,7 +464,7 @@ class Evaluator {
         return this.protect(() => this.rt.eval(node, this.scope));
       case Kind.Name: {
         if (node.binding && node.binding.kind === 'global') {
-          if (!PURE_GLOBALS.has(node.binding.name)) return { ok: false };
+          if (!GLOBALS.has(node.binding.name)) return { ok: false };
           return { ok: true, value: this.rt.globals.get(node.binding.name) };
         }
         if (this.live) {
