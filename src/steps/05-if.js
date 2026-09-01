@@ -131,11 +131,65 @@ function flattenMarkers(root) {
   return merged;
 }
 
+function isAntiTamperGuard(statement, blockStatements, index) {
+  if (statement.kind !== Kind.If) return false;
+  if (statement.elseIfs && statement.elseIfs.length > 0) return false;
+  if (statement.elseBody && statement.elseBody.statements && statement.elseBody.statements.length > 0) {
+    if (!divergesBlock(statement.elseBody)) return false;
+  }
+
+  const cond = bare(statement.condition);
+  if (!cond || cond.kind !== Kind.Name) return false;
+
+  const flagName = cond.name;
+  const binding = cond.binding;
+
+  const preceding = blockStatements.slice(0, index);
+  let hasTamperCheck = false;
+  let flagInitialized = false;
+
+  for (const prev of preceding) {
+    walk(prev, {
+      enter(node) {
+        if (node.kind === Kind.String && typeof node.value === 'string' && /tamper/i.test(node.value)) {
+          hasTamperCheck = true;
+        }
+        if (node.kind === Kind.Call && node.base && node.base.kind === Kind.Name && node.base.name === 'error') {
+          if (node.args && node.args.length && node.args[0].kind === Kind.String && /tamper/i.test(node.args[0].value)) {
+            hasTamperCheck = true;
+          }
+        }
+        if (node.kind === Kind.Assignment) {
+          for (let i = 0; i < (node.targets || []).length; i += 1) {
+            const target = bare(node.targets[i]);
+            if (target && target.kind === Kind.Name && (target.name === flagName || (binding && target.binding === binding))) {
+              const expr = (node.expressions || [])[i];
+              if (expr && (expr.kind === Kind.True || C.truthiness(expr) === true)) {
+                flagInitialized = true;
+              }
+            }
+          }
+        }
+        return undefined;
+      },
+    });
+  }
+
+  return hasTamperCheck && flagInitialized;
+}
+
 function pruneBlock(block, counters) {
   const out = [];
-  for (const statement of block.statements) {
+  for (let i = 0; i < block.statements.length; i += 1) {
+    const statement = block.statements[i];
+    if (isAntiTamperGuard(statement, block.statements, i)) {
+      counters.guards += 1;
+      const inner = (statement.body && statement.body.statements) || [];
+      out.push(...inner);
+      continue;
+    }
     if (statement.kind === Kind.Repeat && !(statement.body.statements || []).length) {
-      if (inertCondition(statement.condition)) {
+      if (isPure(statement.condition)) {
         counters.loops += 1;
         continue;
       }
