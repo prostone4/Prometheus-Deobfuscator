@@ -11,6 +11,7 @@ const LOOPS = new Set([Kind.While, Kind.Repeat, Kind.NumericFor, Kind.GenericFor
 const LOOP_KINDS = LOOPS;
 
 const EXITS = new Set([Kind.Return, Kind.Break, Kind.Continue]);
+const LEAVING_KINDS = EXITS;
 
 function rootsOf(chunk) {
   const roots = [];
